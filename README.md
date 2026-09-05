@@ -17,6 +17,12 @@ Euler's Golden Pie activity book.
 - Mobile-friendly layout
 - Ready for a QR code once the final GitHub Pages URL is live
 
+
+## Included branding assets
+
+- `logo.png` — logo shown at the top of the page
+- `favicon.png` — browser-tab icon
+
 ## Important: connect the upload backend
 
 GitHub Pages is static hosting. It cannot securely store uploaded videos.
