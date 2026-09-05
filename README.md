@@ -1,6 +1,6 @@
 # EGP Story Submission Page
 
-A responsive GitHub Pages front end for collecting video submissions from the
+A responsive **dark-themed** GitHub Pages front end for collecting video submissions from the
 Euler's Golden Pie activity book.
 
 ## What is already built
