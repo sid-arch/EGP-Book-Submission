@@ -80,3 +80,12 @@ submission will intentionally stop until `UPLOAD_ENDPOINT` is configured.
 ## Latest tweak
 
 - Enlarged the header logo significantly so it is a prominent centerpiece instead of a tiny icon.
+
+
+## Supabase connection
+
+This build is wired to the EGP Supabase project using the frontend publishable key.
+Videos are uploaded privately to the `story-videos` bucket and submission metadata is inserted into the `submissions` table.
+The page enforces a 50 MB file-size limit and a 60-second video-length limit.
+
+The publishable key in `config.js` is a browser/client key. Do not replace it with a service-role key.

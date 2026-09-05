@@ -1,4 +1,5 @@
-const MAX_FILE_BYTES = 250 * 1024 * 1024;
+const MAX_FILE_BYTES = 50 * 1024 * 1024;
+const MAX_VIDEO_SECONDS = 60;
 const ALLOWED_TYPES = [
   "video/mp4",
   "video/quicktime",
@@ -23,6 +24,20 @@ const errorBox = document.getElementById("errorBox");
 const successBox = document.getElementById("successBox");
 
 let previewUrl = null;
+let selectedVideoDuration = null;
+
+const cfg = window.EGP_CONFIG || {};
+if (!cfg.SUPABASE_URL || !cfg.SUPABASE_KEY) {
+  console.error("Supabase is not configured in config.js");
+}
+
+const supabaseClient = window.supabase.createClient(
+  cfg.SUPABASE_URL,
+  cfg.SUPABASE_KEY,
+  {
+    auth: { persistSession: false, autoRefreshToken: false }
+  }
+);
 
 function showError(message) {
   successBox.classList.add("hidden");
@@ -60,18 +75,29 @@ function updateGuardianRequirement() {
 
 ageGroup.addEventListener("change", updateGuardianRequirement);
 
+function resetSelectedFile() {
+  videoInput.value = "";
+  filePill.classList.add("hidden");
+  videoPreview.classList.add("hidden");
+  videoPreview.removeAttribute("src");
+  selectedVideoDuration = null;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = null;
+}
+
 function setFile(file) {
   clearMessages();
+  selectedVideoDuration = null;
 
   if (!file) return;
   if (!ALLOWED_TYPES.includes(file.type)) {
-    videoInput.value = "";
+    resetSelectedFile();
     showError("Please choose an MP4, MOV, M4V, or WebM video.");
     return;
   }
   if (file.size > MAX_FILE_BYTES) {
-    videoInput.value = "";
-    showError("That video is larger than 250 MB. Please shorten or compress it and try again.");
+    resetSelectedFile();
+    showError("That video is larger than 50 MB. Please shorten or compress it and try again.");
     return;
   }
 
@@ -83,18 +109,18 @@ function setFile(file) {
   previewUrl = URL.createObjectURL(file);
   videoPreview.src = previewUrl;
   videoPreview.classList.remove("hidden");
+
+  videoPreview.onloadedmetadata = () => {
+    selectedVideoDuration = Number(videoPreview.duration);
+    if (Number.isFinite(selectedVideoDuration) && selectedVideoDuration > MAX_VIDEO_SECONDS + 0.25) {
+      resetSelectedFile();
+      showError("Please keep the story video to 60 seconds or less.");
+    }
+  };
 }
 
 videoInput.addEventListener("change", () => setFile(videoInput.files[0]));
-
-removeFile.addEventListener("click", () => {
-  videoInput.value = "";
-  filePill.classList.add("hidden");
-  videoPreview.classList.add("hidden");
-  videoPreview.removeAttribute("src");
-  if (previewUrl) URL.revokeObjectURL(previewUrl);
-  previewUrl = null;
-});
+removeFile.addEventListener("click", resetSelectedFile);
 
 ["dragenter", "dragover"].forEach(eventName => {
   uploadZone.addEventListener(eventName, event => {
@@ -112,41 +138,62 @@ removeFile.addEventListener("click", () => {
 uploadZone.addEventListener("drop", event => {
   const file = event.dataTransfer.files?.[0];
   if (!file) return;
-
   const dt = new DataTransfer();
   dt.items.add(file);
   videoInput.files = dt.files;
   setFile(file);
 });
 
-async function submitToEndpoint(payload, file) {
-  const endpoint = window.EGP_CONFIG?.UPLOAD_ENDPOINT?.trim();
+function safeExtension(file) {
+  const nameExt = (file.name.split(".").pop() || "").toLowerCase();
+  if (["mp4", "mov", "m4v", "webm"].includes(nameExt)) return nameExt;
+  const map = {
+    "video/mp4": "mp4",
+    "video/quicktime": "mov",
+    "video/x-m4v": "m4v",
+    "video/webm": "webm"
+  };
+  return map[file.type] || "mp4";
+}
 
-  if (!endpoint || endpoint.includes("YOUR-UPLOAD-ENDPOINT")) {
-    throw new Error(
-      "UPLOAD_NOT_CONFIGURED"
-    );
+async function uploadSubmission(payload, file) {
+  const id = crypto.randomUUID();
+  const day = new Date().toISOString().slice(0, 10);
+  const ext = safeExtension(file);
+  const videoPath = `${day}/${id}.${ext}`;
+
+  const { error: uploadError } = await supabaseClient.storage
+    .from(cfg.STORAGE_BUCKET || "story-videos")
+    .upload(videoPath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
+    });
+
+  if (uploadError) {
+    console.error("Storage upload error:", uploadError);
+    throw new Error(`Video upload failed: ${uploadError.message}`);
   }
 
-  const data = new FormData();
-  data.append("video", file);
-  Object.entries(payload).forEach(([key, value]) => data.append(key, value));
+  const row = {
+    storyteller_name: payload.storytellerName,
+    age_group: payload.ageGroup,
+    guardian_email: payload.guardianEmail || null,
+    review_consent: true,
+    publishing_permission: payload.publishingPermission,
+    video_path: videoPath
+  };
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    body: data
-  });
+  const { error: insertError } = await supabaseClient
+    .from(cfg.SUBMISSIONS_TABLE || "submissions")
+    .insert(row);
 
-  if (!response.ok) {
-    let message = "Upload failed. Please try again.";
-    try {
-      const result = await response.json();
-      if (result?.message) message = result.message;
-    } catch (_) {}
-    throw new Error(message);
+  if (insertError) {
+    console.error("Submission insert error:", insertError);
+    throw new Error(`Video uploaded, but submission details could not be saved: ${insertError.message}`);
   }
 
-  return response;
+  return { id, videoPath };
 }
 
 form.addEventListener("submit", async event => {
@@ -163,6 +210,10 @@ form.addEventListener("submit", async event => {
     return showError("Please enter a parent or guardian email for storytellers under 18.");
   }
   if (!file) return showError("Please choose your story video.");
+  if (file.size > MAX_FILE_BYTES) return showError("Please keep the video under 50 MB.");
+  if (Number.isFinite(selectedVideoDuration) && selectedVideoDuration > MAX_VIDEO_SECONDS + 0.25) {
+    return showError("Please keep the story video to 60 seconds or less.");
+  }
   if (!reviewConsent.checked) {
     return showError("Permission to review the submitted video is required.");
   }
@@ -171,30 +222,20 @@ form.addEventListener("submit", async event => {
     storytellerName: name,
     ageGroup: ageGroup.value,
     guardianEmail: guardianEmail.value.trim(),
-    reviewConsent: "yes",
-    publishingPermission: publishConsent.checked ? "yes" : "no",
-    submittedAt: new Date().toISOString()
+    publishingPermission: publishConsent.checked
   };
 
   submitBtn.disabled = true;
-  submitBtn.firstElementChild.textContent = "Sending Story…";
+  submitBtn.firstElementChild.textContent = "Uploading Story…";
 
   try {
-    await submitToEndpoint(payload, file);
-    showSuccess("Story sent! 🎉 Thanks for sharing your EGP creation with us.");
+    await uploadSubmission(payload, file);
+    showSuccess("Story sent! 🎉 Your video was uploaded successfully to EGP.");
     form.reset();
-    filePill.classList.add("hidden");
-    videoPreview.classList.add("hidden");
-    videoPreview.removeAttribute("src");
+    resetSelectedFile();
     updateGuardianRequirement();
   } catch (error) {
-    if (error.message === "UPLOAD_NOT_CONFIGURED") {
-      showError(
-        "This demo page is ready, but the private video-upload endpoint has not been connected yet. Add it in config.js before publishing the QR code."
-      );
-    } else {
-      showError(error.message || "Something went wrong while sending the video. Please try again.");
-    }
+    showError(error.message || "Something went wrong while sending the video. Please try again.");
   } finally {
     submitBtn.disabled = false;
     submitBtn.firstElementChild.textContent = "Send My Story";
