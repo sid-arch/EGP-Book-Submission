@@ -76,3 +76,7 @@ submission will intentionally stop until `UPLOAD_ENDPOINT` is configured.
 - Test iPhone and Android uploads.
 - Test a large phone-recorded MOV file.
 - Generate the QR code from the permanent final URL.
+
+## Latest tweak
+
+- Enlarged the header logo significantly so it is a prominent centerpiece instead of a tiny icon.
