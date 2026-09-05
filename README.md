@@ -89,3 +89,14 @@ Videos are uploaded privately to the `story-videos` bucket and submission metada
 The page enforces a 50 MB file-size limit and a 60-second video-length limit.
 
 The publishable key in `config.js` is a browser/client key. Do not replace it with a service-role key.
+
+
+## Premium submission update
+- Premium dark/gold visual refresh
+- Submission details clearly state: one story per video, 60 seconds max, 50 MB max
+- Client-side limit of 3 successful submissions per browser/device per local day
+- Successful submission redirects in the same tab to `thank-you.html`
+- Thank-you page includes animated check mark and remaining-submission count
+
+### Note about the 3/day device limit
+The limit is enforced with browser localStorage. It is useful for normal users, but it is not tamper-proof: clearing browser data, private browsing, or switching browsers/devices can reset it. Strong server-side per-device enforcement would require additional backend identity/rate-limiting infrastructure.

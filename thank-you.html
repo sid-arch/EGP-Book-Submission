@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07090d" />
+  <title>Story Received · Euler's Golden Pie</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="thank-you-body">
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="thank-you-shell">
+    <img src="logo.png" alt="Euler's Golden Pie" class="thank-logo" />
+
+    <section class="thank-card">
+      <div class="check-wrap" aria-hidden="true">
+        <svg class="check-svg" viewBox="0 0 120 120">
+          <circle class="check-circle" cx="60" cy="60" r="52"></circle>
+          <path class="check-path" d="M34 61 L51 78 L87 42"></path>
+        </svg>
+      </div>
+
+      <p class="eyebrow">SUBMISSION COMPLETE</p>
+      <h1>Story received.</h1>
+      <p class="thank-copy">
+        Thanks for sharing your EGP story. Our team will review your video, and if we decide to feature it, we'll reach out using the contact information you provided.
+      </p>
+
+      <div class="thank-divider"></div>
+      <p class="remaining" id="remainingText"></p>
+      <a class="secondary-btn" href="index.html">Submit another story</a>
+    </section>
+
+    <footer>
+      <span>Euler's Golden Pie</span>
+      <small>Story · Memory · Imagination</small>
+    </footer>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const remaining = Number(params.get('remaining'));
+    const el = document.getElementById('remainingText');
+    if (Number.isFinite(remaining)) {
+      el.textContent = remaining > 0
+        ? `${remaining} submission${remaining === 1 ? '' : 's'} remaining today on this device.`
+        : 'You have reached today\'s 3-submission limit on this device.';
+      if (remaining <= 0) document.querySelector('.secondary-btn').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

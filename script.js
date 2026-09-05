@@ -1,5 +1,7 @@
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 const MAX_VIDEO_SECONDS = 60;
+const DAILY_SUBMISSION_LIMIT = 3;
+const DAILY_KEY_PREFIX = "egp_submission_count_";
 const ALLOWED_TYPES = [
   "video/mp4",
   "video/quicktime",
@@ -22,35 +24,60 @@ const publishConsent = document.getElementById("publishConsent");
 const submitBtn = document.getElementById("submitBtn");
 const errorBox = document.getElementById("errorBox");
 const successBox = document.getElementById("successBox");
+const dailyStatus = document.getElementById("dailyStatus");
 
 let previewUrl = null;
 let selectedVideoDuration = null;
 
 const cfg = window.EGP_CONFIG || {};
-if (!cfg.SUPABASE_URL || !cfg.SUPABASE_KEY) {
-  console.error("Supabase is not configured in config.js");
-}
-
 const supabaseClient = window.supabase.createClient(
   cfg.SUPABASE_URL,
   cfg.SUPABASE_KEY,
-  {
-    auth: { persistSession: false, autoRefreshToken: false }
-  }
+  { auth: { persistSession: false, autoRefreshToken: false } }
 );
+
+function localDateKey() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function dailyStorageKey() {
+  return `${DAILY_KEY_PREFIX}${localDateKey()}`;
+}
+
+function getDailyCount() {
+  const value = Number(localStorage.getItem(dailyStorageKey()) || "0");
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+function incrementDailyCount() {
+  const next = Math.min(DAILY_SUBMISSION_LIMIT, getDailyCount() + 1);
+  localStorage.setItem(dailyStorageKey(), String(next));
+  return next;
+}
+
+function submissionsRemaining() {
+  return Math.max(0, DAILY_SUBMISSION_LIMIT - getDailyCount());
+}
+
+function updateDailyStatus() {
+  const remaining = submissionsRemaining();
+  if (!dailyStatus) return;
+  dailyStatus.textContent = remaining > 0
+    ? `${remaining} of ${DAILY_SUBMISSION_LIMIT} submissions remaining today on this device.`
+    : `Today's ${DAILY_SUBMISSION_LIMIT}-submission limit has been reached on this device.`;
+  dailyStatus.classList.toggle("limit-hit", remaining === 0);
+  submitBtn.disabled = remaining === 0;
+}
 
 function showError(message) {
   successBox.classList.add("hidden");
   errorBox.textContent = message;
   errorBox.classList.remove("hidden");
   errorBox.scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-function showSuccess(message) {
-  errorBox.classList.add("hidden");
-  successBox.textContent = message;
-  successBox.classList.remove("hidden");
-  successBox.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function clearMessages() {
@@ -88,17 +115,15 @@ function resetSelectedFile() {
 function setFile(file) {
   clearMessages();
   selectedVideoDuration = null;
-
   if (!file) return;
+
   if (!ALLOWED_TYPES.includes(file.type)) {
     resetSelectedFile();
-    showError("Please choose an MP4, MOV, M4V, or WebM video.");
-    return;
+    return showError("Please choose an MP4, MOV, M4V, or WebM video.");
   }
   if (file.size > MAX_FILE_BYTES) {
     resetSelectedFile();
-    showError("That video is larger than 50 MB. Please shorten or compress it and try again.");
-    return;
+    return showError("That video is larger than 50 MB. Please shorten or compress it and try again.");
   }
 
   fileName.textContent = file.name;
@@ -170,10 +195,7 @@ async function uploadSubmission(payload, file) {
       contentType: file.type
     });
 
-  if (uploadError) {
-    console.error("Storage upload error:", uploadError);
-    throw new Error(`Video upload failed: ${uploadError.message}`);
-  }
+  if (uploadError) throw new Error(`Video upload failed: ${uploadError.message}`);
 
   const row = {
     storyteller_name: payload.storytellerName,
@@ -189,17 +211,19 @@ async function uploadSubmission(payload, file) {
     .insert(row);
 
   if (insertError) {
-    console.error("Submission insert error:", insertError);
     throw new Error(`Video uploaded, but submission details could not be saved: ${insertError.message}`);
   }
-
-  return { id, videoPath };
 }
 
 form.addEventListener("submit", async event => {
   event.preventDefault();
   clearMessages();
   updateGuardianRequirement();
+
+  if (submissionsRemaining() <= 0) {
+    updateDailyStatus();
+    return showError("You have reached the maximum of 3 submissions for today on this device. Please come back tomorrow.");
+  }
 
   const file = videoInput.files[0];
   const name = document.getElementById("name").value.trim();
@@ -214,9 +238,7 @@ form.addEventListener("submit", async event => {
   if (Number.isFinite(selectedVideoDuration) && selectedVideoDuration > MAX_VIDEO_SECONDS + 0.25) {
     return showError("Please keep the story video to 60 seconds or less.");
   }
-  if (!reviewConsent.checked) {
-    return showError("Permission to review the submitted video is required.");
-  }
+  if (!reviewConsent.checked) return showError("Permission to review the submitted video is required.");
 
   const payload = {
     storytellerName: name,
@@ -226,18 +248,19 @@ form.addEventListener("submit", async event => {
   };
 
   submitBtn.disabled = true;
-  submitBtn.firstElementChild.textContent = "Uploading Story…";
+  submitBtn.firstElementChild.textContent = "Uploading…";
 
   try {
     await uploadSubmission(payload, file);
-    showSuccess("Story sent! 🎉 Your video was uploaded successfully to EGP.");
-    form.reset();
-    resetSelectedFile();
-    updateGuardianRequirement();
+    incrementDailyCount();
+    const remaining = submissionsRemaining();
+    window.location.href = `thank-you.html?remaining=${remaining}`;
   } catch (error) {
     showError(error.message || "Something went wrong while sending the video. Please try again.");
-  } finally {
     submitBtn.disabled = false;
-    submitBtn.firstElementChild.textContent = "Send My Story";
+    submitBtn.firstElementChild.textContent = "Submit Story";
   }
 });
+
+updateDailyStatus();
+updateGuardianRequirement();

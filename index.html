@@ -3,41 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b1220" />
-  <meta name="description" content="Share your Euler's Golden Pie story with the EGP team." />
-  <title>Share Your EGP Story!</title>
+  <meta name="theme-color" content="#07090d" />
+  <meta name="description" content="Submit your Euler's Golden Pie story video." />
+  <title>Share Your EGP Story</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="bg-blob blob-one"></div>
-  <div class="bg-blob blob-two"></div>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
 
   <main class="page-shell">
     <header class="hero">
-      <div class="brand-lockup">
-        <img src="logo.png" alt="Euler's Golden Pie logo" class="brand-logo" />
-        <div class="brand-text">
-          <div class="brand-chip">Euler's Golden Pie</div>
-          <div class="brand-sub">Story. Memory. Imagination.</div>
-        </div>
-      </div>
-      <div class="sparkles" aria-hidden="true">✦ ✧ ✦</div>
-      <h1>YOUR STORY<br><span>DESERVES THE SPOTLIGHT!</span></h1>
+      <img src="logo.png" alt="Euler's Golden Pie" class="brand-logo" />
+      <div class="brand-kicker">EULER'S GOLDEN PIE</div>
+      <h1>Your story deserves<br><span>the spotlight.</span></h1>
       <p class="hero-copy">
-        Finished one of the story activities in your EGP book?
-        Record yourself telling your funniest, wildest story and send it to us!
+        Finished a story activity in your EGP book? Record yourself telling it and send it to the EGP team.
       </p>
 
       <div class="steps" aria-label="How it works">
-        <div class="step"><span>1</span><strong>Record</strong><small>Tell your EGP story</small></div>
-        <div class="step-arrow">→</div>
-        <div class="step"><span>2</span><strong>Upload</strong><small>Send your video</small></div>
-        <div class="step-arrow">→</div>
-        <div class="step"><span>3</span><strong>Spotlight</strong><small>Selected stories may be featured</small></div>
+        <div class="step"><b>01</b><strong>Record</strong><small>Tell one EGP story</small></div>
+        <div class="step-line"></div>
+        <div class="step"><b>02</b><strong>Submit</strong><small>Upload your video</small></div>
+        <div class="step-line"></div>
+        <div class="step"><b>03</b><strong>Spotlight</strong><small>Selected stories may be featured</small></div>
       </div>
     </header>
 
@@ -45,10 +38,19 @@
       <div class="card-heading">
         <div>
           <p class="eyebrow">STORY SUBMISSION</p>
-          <h2>Send us your video 🎥</h2>
+          <h2>Send your story</h2>
         </div>
-        <div class="pie-mark" aria-hidden="true">π</div>
+        <div class="monogram" aria-hidden="true">π</div>
       </div>
+
+      <div class="requirements" aria-label="Submission details">
+        <div class="requirement"><span>01</span><div><strong>One story per video</strong><small>Record yourself telling the story you created in the activity book.</small></div></div>
+        <div class="requirement"><span>02</span><div><strong>60 seconds maximum</strong><small>Keep your story video to 1 minute or less.</small></div></div>
+        <div class="requirement"><span>03</span><div><strong>50 MB maximum</strong><small>MP4, MOV, M4V, or WebM.</small></div></div>
+        <div class="requirement"><span>04</span><div><strong>3 submissions per day</strong><small>Maximum of three submissions per device each day.</small></div></div>
+      </div>
+
+      <div class="daily-status" id="dailyStatus" aria-live="polite"></div>
 
       <form id="storyForm" novalidate>
         <div class="field-grid">
@@ -71,21 +73,20 @@
         </div>
 
         <label class="field">
-          <span>Parent / guardian email <em id="emailHint">(required for anyone under 18)</em></span>
+          <span>Parent / guardian email <em>(required for anyone under 18)</em></span>
           <input id="guardianEmail" name="guardianEmail" type="email" autocomplete="email" placeholder="parent@example.com" />
         </label>
 
         <div class="field">
           <span>Your EGP story video</span>
-
           <input id="videoInput" name="video" class="visually-hidden" type="file"
                  accept="video/mp4,video/quicktime,video/webm,video/x-m4v" required />
 
           <label for="videoInput" class="upload-zone" id="uploadZone">
             <div class="upload-icon">↑</div>
-            <strong>Choose a video</strong>
-            <p>or drag & drop it here</p>
-            <small>MP4, MOV, M4V or WebM • 60 seconds max • up to 50 MB</small>
+            <strong>Choose your video</strong>
+            <p>or drag and drop it here</p>
+            <small>1 story · 60 seconds max · 50 MB max</small>
           </label>
 
           <div class="file-pill hidden" id="filePill">
@@ -112,8 +113,7 @@
           </label>
 
           <p class="consent-note">
-            Submitting a video does not automatically make it public.
-            Every submission is reviewed before anything is shared.
+            Submission does not guarantee publication. Every video is reviewed before anything is shared publicly.
           </p>
         </div>
 
@@ -121,19 +121,19 @@
         <div id="successBox" class="message success hidden" role="status"></div>
 
         <button class="submit-btn" id="submitBtn" type="submit">
-          <span>Send My Story</span>
-          <span aria-hidden="true">🚀</span>
+          <span>Submit Story</span>
+          <span class="arrow" aria-hidden="true">→</span>
         </button>
 
         <p class="tiny-note">
-          Only submit a video you have permission to share. Do not include private information such as your home address, school schedule, or phone number in the recording.
+          Please do not include private information such as a home address, school schedule, or phone number in the recording.
         </p>
       </form>
     </section>
 
     <footer>
-      <strong>Made a story worth remembering?</strong>
-      <span>We'd love to see it.</span>
+      <span>Euler's Golden Pie</span>
+      <small>Story · Memory · Imagination</small>
     </footer>
   </main>
 
