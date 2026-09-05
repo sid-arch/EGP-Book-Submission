@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff9ef" />
+  <meta name="description" content="Share your Euler's Golden Pie story with the EGP team." />
+  <title>Share Your EGP Story!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-blob blob-one"></div>
+  <div class="bg-blob blob-two"></div>
+
+  <main class="page-shell">
+    <header class="hero">
+      <div class="brand-chip">Euler's Golden Pie</div>
+      <div class="sparkles" aria-hidden="true">✦ ✧ ✦</div>
+      <h1>YOUR STORY<br><span>DESERVES THE SPOTLIGHT!</span></h1>
+      <p class="hero-copy">
+        Finished one of the story activities in your EGP book?
+        Record yourself telling your funniest, wildest story and send it to us!
+      </p>
+
+      <div class="steps" aria-label="How it works">
+        <div class="step"><span>1</span><strong>Record</strong><small>Tell your EGP story</small></div>
+        <div class="step-arrow">→</div>
+        <div class="step"><span>2</span><strong>Upload</strong><small>Send your video</small></div>
+        <div class="step-arrow">→</div>
+        <div class="step"><span>3</span><strong>Spotlight</strong><small>Selected stories may be featured</small></div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow">STORY SUBMISSION</p>
+          <h2>Send us your video 🎥</h2>
+        </div>
+        <div class="pie-mark" aria-hidden="true">π</div>
+      </div>
+
+      <form id="storyForm" novalidate>
+        <div class="field-grid">
+          <label class="field">
+            <span>Storyteller name or nickname</span>
+            <input id="name" name="name" type="text" maxlength="50" placeholder="e.g. Super Story Sam" required />
+          </label>
+
+          <label class="field">
+            <span>Age group</span>
+            <select id="ageGroup" name="ageGroup" required>
+              <option value="" selected disabled>Choose one</option>
+              <option>6–8</option>
+              <option>9–11</option>
+              <option>12–14</option>
+              <option>15–17</option>
+              <option>18+</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Parent / guardian email <em id="emailHint">(required for anyone under 18)</em></span>
+          <input id="guardianEmail" name="guardianEmail" type="email" autocomplete="email" placeholder="parent@example.com" />
+        </label>
+
+        <div class="field">
+          <span>Your EGP story video</span>
+
+          <input id="videoInput" name="video" class="visually-hidden" type="file"
+                 accept="video/mp4,video/quicktime,video/webm,video/x-m4v" required />
+
+          <label for="videoInput" class="upload-zone" id="uploadZone">
+            <div class="upload-icon">↑</div>
+            <strong>Choose a video</strong>
+            <p>or drag & drop it here</p>
+            <small>MP4, MOV, M4V or WebM • up to 250 MB</small>
+          </label>
+
+          <div class="file-pill hidden" id="filePill">
+            <div class="file-icon">▶</div>
+            <div class="file-info">
+              <strong id="fileName">video.mp4</strong>
+              <span id="fileSize">0 MB</span>
+            </div>
+            <button type="button" id="removeFile" aria-label="Remove selected video">×</button>
+          </div>
+
+          <video id="videoPreview" class="video-preview hidden" controls playsinline></video>
+        </div>
+
+        <div class="consent-box">
+          <label class="check-row">
+            <input id="reviewConsent" type="checkbox" required />
+            <span>I give the Euler's Golden Pie team permission to review this submitted video.</span>
+          </label>
+
+          <label class="check-row">
+            <input id="publishConsent" type="checkbox" />
+            <span>I give permission for this video to be considered for an EGP YouTube or social-media feature.</span>
+          </label>
+
+          <p class="consent-note">
+            Submitting a video does not automatically make it public.
+            Every submission is reviewed before anything is shared.
+          </p>
+        </div>
+
+        <div id="errorBox" class="message error hidden" role="alert"></div>
+        <div id="successBox" class="message success hidden" role="status"></div>
+
+        <button class="submit-btn" id="submitBtn" type="submit">
+          <span>Send My Story</span>
+          <span aria-hidden="true">🚀</span>
+        </button>
+
+        <p class="tiny-note">
+          Only submit a video you have permission to share. Do not include private information such as your home address, school schedule, or phone number in the recording.
+        </p>
+      </form>
+    </section>
+
+    <footer>
+      <strong>Made a story worth remembering?</strong>
+      <span>We'd love to see it.</span>
+    </footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
